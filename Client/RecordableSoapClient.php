@@ -276,11 +276,14 @@ class RecordableSoapClient extends \SoapClient
             file_put_contents($this->getRequestFilePath(), self::formatXml($request));
         }
 
+        $start = microtime(true);
         // Process the real SOAP call
         $response = parent::__doRequest($request, $location, $action, $version, $one_way);
 
         // Potentially record the response
         if (self::$recordCommunications) {
+            $end = microtime(true);
+            file_put_contents($this->getTimeFilePath(), number_format(($end-$start)*1000, 3, '.', ''));
             file_put_contents($this->getResponseFilePath(), self::formatXml($response, false));
         }
 
@@ -306,6 +309,16 @@ class RecordableSoapClient extends \SoapClient
     {
         return $this->generateFilePath('response');
     }
+    
+    /**
+     * Generate a time file path based on the unique id
+     *
+     * @return string
+     */
+    protected function getTimeFilePath()
+    {
+        return $this->generateFilePath('time');
+    }
 
     /**
      * Generate a path where to store a given WSDL
@@ -328,14 +341,15 @@ class RecordableSoapClient extends \SoapClient
     {
         $folder = 'request' === $type ? self::$requestFolder : self::$responseFolder;
 
-        if (null === $folder) {
+        if ($folder === null) {
             throw new \RuntimeException("You must call RecordableSoapClient::setRecordFolders() before using the recorder");
         }
+
         if ($this->uniqueRequestId === null){
             throw new \RuntimeException("Unexpected error when generating the unique request ID, please contact the LiipSoapRecorderBundle maintainers");
         }
 
-        return $folder.DIRECTORY_SEPARATOR.$this->uniqueRequestId.'.xml';
+        return $folder.DIRECTORY_SEPARATOR.$this->uniqueRequestId.($type == 'time' ? '.mst' : '.xml');
     }
 
     /**
@@ -361,7 +375,7 @@ class RecordableSoapClient extends \SoapClient
                 $xmlOutput = $doc->saveXML();
             }
 
-            return rtrim($xmlOutput, PHP_EOL).PHP_EOL;
+            return $xmlOutput;
         }
         return $xmlData;
     }

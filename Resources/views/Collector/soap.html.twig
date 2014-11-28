@@ -8,6 +8,7 @@
     <strong>SOAP</strong>
     <span class="count">
         <span>{{ collector.count }}</span>
+        <span>{{ '%0.0f'|format(collector.time) }} ms</span>
     </span>
 </span>
 {% endblock %}
@@ -20,6 +21,10 @@
     {% set text %}
         SOAP | <span class="count"><span>{{ collector.count }}</span>
         </span>
+        <div class="sf-toolbar-info-piece">
+            <b>Response time</b>
+            <span>{{ '%0.2f'|format(collector.time) }} ms</span>
+        </div>
     {% endset %}
     {% include 'WebProfilerBundle:Profiler:toolbar_item.html.twig' with { 'link': profiler_url } %}
 {% endblock %}
@@ -36,7 +41,9 @@
         <tbody>
         {% for request in collector.requests %}
             <tr>
-            	<td id="request{{ loop.index }}"><a href="#response{{ loop.index }}">{{ loop.index }}</a></td>
+            	<td id="request{{ loop.index }}"><a href="#response{{ loop.index }}">{{ loop.index }}</a>
+                  <br><span>{{ '%0.2f'|format(collector.times[loop.index-1]) }} ms</span> </td>
+                </td>
                 <td><pre style="width:70em;overflow:auto;{% if 'Exception' in collector.responses[loop.index-1] %} color:red; {% endif %}">{{ request }}</pre></td>
             </tr>
         {% endfor %}
@@ -53,7 +60,8 @@
         <tbody>
         {% for response in collector.responses %}
             <tr>
-            	<td id="response{{ loop.index }}"><a href="#request{{ loop.index }}">{{ loop.index }}</a></td>
+            	<td id="response{{ loop.index }}"><a href="#request{{ loop.index }}">{{ loop.index }}</a>
+                <br><span>{{ '%0.2f'|format(collector.times[loop.index-1]) }} ms</span> </td>
                 <td><pre style="width:70em;overflow:auto;{% if 'Exception' in response %} color:red; {% endif %}">{{ response }}</pre></td>
             </tr>
         {% endfor %}
